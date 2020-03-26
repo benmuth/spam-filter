@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"bufio"
-	"strings"
-	"unicode"
+	//"fmt"
+	//"io/ioutil"
+	//"os"
+	//"bufio"
+	//"strings"
+	//"unicode"
 )
-
+/*
 func fileToString() string {
 	reader := bufio.NewReader(os.Stdin)
    	fmt.Print("Enter the name of the file you want to read: ")
@@ -30,14 +30,39 @@ func wordFreq (fileString string) map[string]int {
 	}
 	slicedString := strings.FieldsFunc(fileString, f)
 	for _, v := range slicedString {
+		v = strings.ToLower(v)
 		wordCount[v]++
 	}
 	return wordCount
 }
-
-
+*/
+func probTable(goodMap map[string]int, badMap map[string]int, nGoodMail int, nBadMail int) map[string]float64 {
+	probMap := make(map[string]float64)
+	for word, _ := range goodMap {
+		probMap[word] = 0.0
+	}	
+	for word, _ := range badMap {
+		probMap[word] = 0.0
+	}
+	for word, _ := range probMap {
+		goodCount, inGoodMap := goodMap[word]
+		badCount, inBadMap := badMap[word]
+		goodCount = float64(goodCount * 2)
+		badCount = float64(badCount)
+		if goodCount + badCount < 5 {
+			continue
+		} else if inGoodMap == false && inBadMap == true {
+			probMap[word] = 0.99
+		} else if inGoodMap == true && inBadMap == false {
+			probMap[word] = 0.01
+		} else {
+			probMap[word] = float64((badCount / nBadMail) / ((goodCount / nGoodMail) + (badCount / nBadMail)))
+		}
+	}
+	return probMap
+}
 
 func main() {
-	fileString := fileToString()
-	fmt.Println(wordFreq(fileString))
+	//fileString := fileToString()
+	//fmt.Println(wordFreq(fileString))
 }
