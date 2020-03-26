@@ -47,16 +47,20 @@ func probTable(goodMap map[string]int, badMap map[string]int, nGoodMail int, nBa
 	for word, _ := range probMap {
 		goodCount, inGoodMap := goodMap[word]
 		badCount, inBadMap := badMap[word]
-		goodCount = float64(goodCount * 2)
-		badCount = float64(badCount)
-		if goodCount + badCount < 5 {
+		var flGoodCount float64 = float64(goodCount)
+		var flBadCount float64 = float64(badCount)
+		var flNGoodMail float64 = float64(nGoodMail)
+		var flNBadMail float64 = float64(nBadMail)
+		flGoodCount = flGoodCount * 2
+		if flGoodCount + flBadCount < 5 {
+			delete(probMap, word)
 			continue
 		} else if inGoodMap == false && inBadMap == true {
 			probMap[word] = 0.99
 		} else if inGoodMap == true && inBadMap == false {
 			probMap[word] = 0.01
 		} else {
-			probMap[word] = float64((badCount / nBadMail) / ((goodCount / nGoodMail) + (badCount / nBadMail)))
+			probMap[word] = float64((flBadCount / flNBadMail) / ((flGoodCount / flNGoodMail) + (flBadCount / flNBadMail)))
 		}
 	}
 	return probMap
