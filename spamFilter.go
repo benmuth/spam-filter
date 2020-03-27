@@ -8,6 +8,7 @@ import (
 	//"strings"
 	//"unicode"
 	//"math"
+	//"sort"
 )
 /*
 func fileToString() string {
@@ -65,11 +66,34 @@ func probTable(goodMap map[string]int, badMap map[string]int, nGoodMail int, nBa
 	return probMap
 }
 
+func quickSort(wordProbSlice []wordProb, start int, end int) {
+	if start >= end {
+		pivot := wordProbSlice[end]
+		pIndex := start
+		temp := wordProb{}
+		for i := start; i < end - 1; i++  {
+			if wordProbSlice[i].interest <= pivot.interest {
+				temp = pivot
+				pivot = wordProbSlice[i]
+				wordProbSlice[i] = temp
+				pIndex++
+			}
+		}
+		temp = pivot
+		pivot = wordProbSlice[pIndex]
+		wordProbSlice[pIndex] = temp	
+		quickSort(wordProbSlice, start, pIndex - 1)
+		quickSort(wordProbSlice, pIndex + 1, end)
+	}
+	
+}
+
 type wordProb struct {
 	token string
 	probability float64
 	interest float64
 }
+
 
 func isSpam(newMail *os.File, probMap map[string]float64) bool {
 	bytes, err := ioutil.ReadAll(newMail)				//Read mail file into string
@@ -100,6 +124,8 @@ func isSpam(newMail *os.File, probMap map[string]float64) bool {
 		wordProbSlice[i].interest = math.Abs(0.5 - prob)
 		i++
 	}
+	quickSort(wordProbSlice, 0, len(wordProbSlice) - 1)
+	
 	
 }
 
