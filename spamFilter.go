@@ -7,6 +7,7 @@ import (
 	//"bufio"
 	//"strings"
 	//"unicode"
+	//"math"
 )
 /*
 func fileToString() string {
@@ -23,18 +24,19 @@ func fileToString() string {
 	return fileString
 }
 
-func wordFreq (fileString string) map[string]int {
-	wordCount := make(map[string]int)
+func wordCount (fileString string) map[string]int {
+	wordCountMap := make(map[string]int)
 	f := func(c rune) bool {
 		return !unicode.IsLetter(c) && !unicode.IsNumber(c)
 	}
 	slicedString := strings.FieldsFunc(fileString, f)
-	for _, v := range slicedString {
-		v = strings.ToLower(v)
-		wordCount[v]++
+	for _, word := range slicedString {
+		word = strings.ToLower(word)
+		wordCountMap[word]++
 	}
-	return wordCount
+	return wordCountMap
 }
+
 */
 func probTable(goodMap map[string]int, badMap map[string]int, nGoodMail int, nBadMail int) map[string]float64 {
 	probMap := make(map[string]float64)
@@ -47,10 +49,7 @@ func probTable(goodMap map[string]int, badMap map[string]int, nGoodMail int, nBa
 	for word, _ := range probMap {
 		goodCount, inGoodMap := goodMap[word]
 		badCount, inBadMap := badMap[word]
-		var flGoodCount float64 = float64(goodCount)
-		var flBadCount float64 = float64(badCount)
-		var flNGoodMail float64 = float64(nGoodMail)
-		var flNBadMail float64 = float64(nBadMail)
+		var flGoodCount, flBadCount, flNGoodMail, flNBadMail = float64(goodCount), float64(badCount), float64(nGoodMail), float64(nBadMail)
 		flGoodCount = flGoodCount * 2
 		if flGoodCount + flBadCount < 5 {
 			delete(probMap, word)
@@ -60,10 +59,48 @@ func probTable(goodMap map[string]int, badMap map[string]int, nGoodMail int, nBa
 		} else if inGoodMap == true && inBadMap == false {
 			probMap[word] = 0.01
 		} else {
-			probMap[word] = float64((flBadCount / flNBadMail) / ((flGoodCount / flNGoodMail) + (flBadCount / flNBadMail)))
+			probMap[word] = float64((flBadCount / flNBadMail) / ((flGoodCount / flNGoodMail) +(flBadCount / flNBadMail)))
 		}
 	}
 	return probMap
+}
+
+type wordProb struct {
+	token string
+	probability float64
+	interest float64
+}
+
+func isSpam(newMail *os.File, probMap map[string]float64) bool {
+	bytes, err := ioutil.ReadAll(newMail)				//Read mail file into string
+	mailString := string(bytes)
+	f := func(c rune) bool {
+		return !unicode.IsLetter(c) && !unicode.IsNumber(c)
+	}
+	mailSlice := strings.FieldsFunc(mailString, f)	//split string into slice
+	newMailMap := make(map[string]float64)			
+	for _, mailWord := range mailSlice {
+		mailWord = strings.ToLower(mailWord)
+		prob, isKnownProb := probMap[mailWord]			
+		if isKnownProb == false {			//fill map with words from mail and their probabilities
+			newMailMap[mailWord] = 0.4
+		} else {
+			newMailMap[mailWord] = prob
+		}
+	}
+	mapLength := 0
+	for _, _ = range newMailMap {
+		mapLength++
+	}
+	wordProbSlice := make([]wordProb, mapLength)		//make a slice and fill with words from mail and their probs
+	i := 0
+	for word, prob := range newMailMap {
+		wordProbSlice[i].token = word
+		wordProbSlice[i].probability = prob
+		wordProbSlice[i].interest = math.Abs(0.5 - prob)
+		i++
+	}
+	
 }
 
 func main() {
