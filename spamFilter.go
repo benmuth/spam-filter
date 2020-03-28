@@ -1,14 +1,14 @@
 package main
 
 import (
-	//"fmt"
-	//"io/ioutil"
-	//"os"
+	"fmt"
+	"io/ioutil"
+	"os"
 	//"bufio"
-	//"strings"
-	//"unicode"
-	//"math"
-	//"sort"
+	"strings"
+	"unicode"
+	"math"
+	"sort"
 )
 /*
 func fileToString() string {
@@ -66,10 +66,15 @@ func probTable(goodMap map[string]int, badMap map[string]int, nGoodMail int, nBa
 	return probMap
 }
 
+/*
 func quickSort(wordProbSlice []wordProb, start int, end int) {
-	if start >= end {
-		pivot := wordProbSlice[end]
-		pIndex := start
+	j := 0
+	var pivot wordProb{}
+	var pIndex int
+	if start < end {
+		j++
+		pivot = wordProbSlice[end]
+		pIndex = start
 		temp := wordProb{}
 		for i := start; i < end - 1; i++  {
 			if wordProbSlice[i].interest <= pivot.interest {
@@ -84,9 +89,11 @@ func quickSort(wordProbSlice []wordProb, start int, end int) {
 		wordProbSlice[pIndex] = temp	
 		quickSort(wordProbSlice, start, pIndex - 1)
 		quickSort(wordProbSlice, pIndex + 1, end)
+	} else {
+		fmt.Println("sorted ", j, " times!")
 	}
-	
 }
+*/
 
 type wordProb struct {
 	token string
@@ -94,13 +101,25 @@ type wordProb struct {
 	interest float64
 }
 
+type ByInterest []wordProb
 
-func isSpam(newMail *os.File, probMap map[string]float64) bool {
-	bytes, err := ioutil.ReadAll(newMail)				//Read mail file into string
+func (a ByInterest) Len() int           { return len(a) }
+func (a ByInterest) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByAge) Less(i, j int) bool { return a[i].interest < a[j].interest }
+
+
+
+func isSpam(mailString string, probMap map[string]float64) bool {
+	/*
+	bytes, err := ioutil.ReadAll(newMail)			
+	if err != nil {
+		panic(err)
+	}
 	mailString := string(bytes)
 	f := func(c rune) bool {
 		return !unicode.IsLetter(c) && !unicode.IsNumber(c)
 	}
+	*/
 	mailSlice := strings.FieldsFunc(mailString, f)	//split string into slice
 	newMailMap := make(map[string]float64)			
 	for _, mailWord := range mailSlice {
@@ -124,9 +143,23 @@ func isSpam(newMail *os.File, probMap map[string]float64) bool {
 		wordProbSlice[i].interest = math.Abs(0.5 - prob)
 		i++
 	}
-	quickSort(wordProbSlice, 0, len(wordProbSlice) - 1)
-	
-	
+	//quickSort(wordProbSlice, 0, len(wordProbSlice) - 1)
+	sort.Sort(ByInterest(wordProbSlice))
+	mostInteresting := wordProbSlice[len(wordProbSlice) - 15:]
+	var probProd, invProbProd float64 = 1.0
+	for _, v := range mostInteresting {
+		probProd = v.probability * probProd
+		invProb := 1 - v.probability
+		invProbProd = invProb * invProbProd
+	}	
+	combProd := probProd/(probProd + invProbProd)
+	var mailIsSpam bool
+	if combProd >= 0.9 {
+		mailIsSpam = true
+	} else {
+		mailIsSpam = false
+	}
+	return mailIsSpam
 }
 
 func main() {
