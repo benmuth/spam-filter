@@ -10,12 +10,46 @@ import (
 	"math"
 	"sort"
 )
-/*
-func fileToString() string {
-	reader := bufio.NewReader(os.Stdin)
-   	fmt.Print("Enter the name of the file you want to read: ")
-	fileName, _ := reader.ReadString('\n')
-	fileName = strings.TrimSpace(fileName)
+
+func buildCorpus(dirName string) (string, int) {
+	fileSlice, err := ioutil.ReadDir(dirName)
+	if err != nil {
+		panic(err)
+	}
+	nMail := len(fileSlice)
+	var dirLength int64
+	for _, file := range fileSlice {
+		dirLength += file.Size()
+	}
+	copiedLength := 0
+	corpusSlice := make([]byte, dirLength)
+	for _, file := range fileSlice {
+		filePath := fmt.Sprintf("%s/%s", dirName, file.Name())
+		pFile, err := os.Open(filePath)
+		if err != nil {
+        		panic(err)
+   		}	
+		bytes, err := ioutil.ReadAll(pFile)
+		if err != nil {
+			panic(err)
+		}
+		copiedLength += copy(corpusSlice[copiedLength:], bytes)
+		err = pFile.Close()
+		if err != nil {
+			panic(err)
+		}
+	}
+	corpus := string(corpusSlice)
+	return corpus, nMail
+}
+
+
+func fileToString(fileName string) string {
+	//reader := bufio.NewReader(os.Stdin)
+   	//fmt.Print("Enter the name of the file you want to read: ")
+	//fileName, _ := reader.ReadString('\n')
+	//fileName = strings.TrimSpace(fileName)
+	
 	file, err := os.Open(fileName)
 	if err != nil {
         	panic(err)
@@ -24,6 +58,7 @@ func fileToString() string {
 	fileString := string(bytes)
 	return fileString
 }
+
 
 func wordCount (fileString string) map[string]int {
 	wordCountMap := make(map[string]int)
@@ -38,8 +73,7 @@ func wordCount (fileString string) map[string]int {
 	return wordCountMap
 }
 
-*/
-func probTable(goodMap map[string]int, badMap map[string]int, nGoodMail int, nBadMail int) map[string]float64 {
+func probCalc(goodMap map[string]int, badMap map[string]int, nGoodMail int, nBadMail int) map[string]float64 {
 	probMap := make(map[string]float64)
 	for word, _ := range goodMap {
 		probMap[word] = 0.0
@@ -105,21 +139,21 @@ type ByInterest []wordProb
 
 func (a ByInterest) Len() int           { return len(a) }
 func (a ByInterest) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByAge) Less(i, j int) bool { return a[i].interest < a[j].interest }
+func (a ByInterest) Less(i, j int) bool { return a[i].interest < a[j].interest }
 
 
 
 func isSpam(mailString string, probMap map[string]float64) bool {
-	/*
-	bytes, err := ioutil.ReadAll(newMail)			
-	if err != nil {
-		panic(err)
-	}
-	mailString := string(bytes)
+	
+	//bytes, err := ioutil.ReadAll(newMail)			
+	//if err != nil {
+	//	panic(err)
+	//}
+	//mailString := string(bytes)
+	
 	f := func(c rune) bool {
 		return !unicode.IsLetter(c) && !unicode.IsNumber(c)
 	}
-	*/
 	mailSlice := strings.FieldsFunc(mailString, f)	//split string into slice
 	newMailMap := make(map[string]float64)			
 	for _, mailWord := range mailSlice {
@@ -145,16 +179,24 @@ func isSpam(mailString string, probMap map[string]float64) bool {
 	}
 	//quickSort(wordProbSlice, 0, len(wordProbSlice) - 1)
 	sort.Sort(ByInterest(wordProbSlice))
-	mostInteresting := wordProbSlice[len(wordProbSlice) - 15:]
-	var probProd, invProbProd float64 = 1.0
+	//fmt.Println("the least to most interesting words are: ", wordProbSlice)
+	var mostInteresting []wordProb
+	if len(wordProbSlice) > 15 {
+		mostInteresting = wordProbSlice[len(wordProbSlice) - 15:]
+	} else {
+		mostInteresting = wordProbSlice 
+	}
+	//fmt.Println("the most interesting words are: ", mostInteresting)
+	var probProd, invProbProd float64 = 1.0, 1.0
 	for _, v := range mostInteresting {
-		probProd = v.probability * probProd
+		probProd *= v.probability
 		invProb := 1 - v.probability
-		invProbProd = invProb * invProbProd
+		invProbProd *= invProb
 	}	
-	combProd := probProd/(probProd + invProbProd)
+	combProb := probProd/(probProd + invProbProd)
+	//fmt.Println("the combined probability is: ", combProb)
 	var mailIsSpam bool
-	if combProd >= 0.9 {
+	if combProb >= 0.9 {
 		mailIsSpam = true
 	} else {
 		mailIsSpam = false
@@ -162,7 +204,17 @@ func isSpam(mailString string, probMap map[string]float64) bool {
 	return mailIsSpam
 }
 
+
 func main() {
-	//fileString := fileToString()
-	//fmt.Println(wordFreq(fileString))
+	goodCorpus, nGoodMail := buildCorpus("/Users/moose1/Documents/SpamFilter/lingspam_public/NotSpam")
+	badCorpus, nBadMail := buildCorpus("/Users/moose1/Documents/SpamFilter/lingspam_public/Spam")
+	goodMap := wordCount(goodCorpus)
+	badMap := wordCount(badCorpus)
+	probMap := probCalc(goodMap, badMap, nGoodMail, nBadMail)
+	spamMailString := fileToString("/Users/moose1/Documents/SpamFilter/lingspam_public/Spam/spmsga1.txt")
+	notSpamMailString := fileToString("/Users/moose1/Documents/SpamFilter/lingspam_public/NotSpam/3-1msg1.txt")
+	isSpamSpam := isSpam(spamMailString, probMap)
+	isNotSpamSpam := isSpam(notSpamMailString, probMap)
+	fmt.Println("Is spam spam? ", isSpamSpam)
+	fmt.Println("Is not spam spam? ", isNotSpamSpam)
 }
