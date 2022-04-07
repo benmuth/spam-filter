@@ -6,51 +6,51 @@ import (
 )
 
 func TestProbTable(t *testing.T) {
-	examples := []struct{
-		name string
-		want map[string]float64
-		goodMap map[string]int
-		badMap map[string]int
+	examples := []struct {
+		name      string
+		want      map[string]float64
+		goodMap   map[string]int
+		badMap    map[string]int
 		nGoodMail int
-		nBadMail int
+		nBadMail  int
 	}{
 		{
-		name: "control",
-		want: map[string]float64{				
-			"the": 0.3478260869565218,
-			"quick": 0.01,
-			"brown": 0.01,
-			"fox": 0.01,
-			"jumped": 0.5,				
-			"over": 0.01,
-			"lazy": 0.5714285714285715,
-			"white": 0.7499999999999999,
-			"dog": 0.01,
-			"computer": 0.99,
+			name: "control",
+			want: map[string]float64{
+				"the":      0.3478260869565218,
+				"quick":    0.01,
+				"brown":    0.01,
+				"fox":      0.01,
+				"jumped":   0.5,
+				"over":     0.01,
+				"lazy":     0.5714285714285715,
+				"white":    0.7499999999999999,
+				"dog":      0.01,
+				"computer": 0.99,
 			},
-		goodMap: map[string]int{
-			"the": 10,
-			"quick": 3,				
-			"brown": 6,
-			"fox": 8,
-			"jumped": 2,
-			"over": 4,
-			"lazy": 5,				
-			"white": 2,
-			"dog": 12,
+			goodMap: map[string]int{
+				"the":    10,
+				"quick":  3,
+				"brown":  6,
+				"fox":    8,
+				"jumped": 2,
+				"over":   4,
+				"lazy":   5,
+				"white":  2,
+				"dog":    12,
 			},
-		badMap: map[string]int{
-			"the": 8,
-			"slow": 4,				
-			"white": 9,
-			"computer": 10,
-			"jumped": 3,
-			"to": 3,
-			"lazy": 10,
-			"function": 4,
+			badMap: map[string]int{
+				"the":      8,
+				"slow":     4,
+				"white":    9,
+				"computer": 10,
+				"jumped":   3,
+				"to":       3,
+				"lazy":     10,
+				"function": 4,
 			},
-		nGoodMail: 20,
-		nBadMail: 15,
+			nGoodMail: 20,
+			nBadMail:  15,
 		},
 	}
 	for _, ex := range examples {
@@ -64,51 +64,51 @@ func TestProbTable(t *testing.T) {
 				}
 				if gotWordIsInWant != true {
 					t.Fatalf("got %s but it isn't in want", gotWord)
-				}	
+				}
 			}
 		})
 	}
 }
 
 func TestIsSpam(t *testing.T) {
-	examples := []struct{
-		name string
-		want bool
-		mail string
+	examples := []struct {
+		name    string
+		want    bool
+		mail    string
 		probMap map[string]float64
 	}{
 		{
-		name: "is Spam",
-		want: true,
-		mail: "computer computer computer computer white white ",
-		probMap: map[string]float64 {
-			"the": 0.3478260869565218,
-			"quick": 0.01,
-			"brown": 0.01,
-			"fox": 0.01,
-			"jumped": 0.5,				
-			"over": 0.01,
-			"lazy": 0.5714285714285715,
-			"white": 0.7499999999999999,
-			"dog": 0.01,
-			"computer": 0.99,
+			name: "is Spam",
+			want: true,
+			mail: "computer computer computer computer white white ",
+			probMap: map[string]float64{
+				"the":      0.3478260869565218,
+				"quick":    0.01,
+				"brown":    0.01,
+				"fox":      0.01,
+				"jumped":   0.5,
+				"over":     0.01,
+				"lazy":     0.5714285714285715,
+				"white":    0.7499999999999999,
+				"dog":      0.01,
+				"computer": 0.99,
 			},
-		}, 
+		},
 		{
-		name: "is not Spam",
-		want: false,
-		mail: "dog over fox brown quick the lazy white computer ",
-		probMap: map[string]float64 {
-			"the": 0.3478260869565218,
-			"quick": 0.01,
-			"brown": 0.01,
-			"fox": 0.01,
-			"jumped": 0.5,				
-			"over": 0.01,
-			"lazy": 0.5714285714285715,
-			"white": 0.7499999999999999,
-			"dog": 0.01,
-			"computer": 0.99,
+			name: "is not Spam",
+			want: false,
+			mail: "dog over fox brown quick the lazy white computer ",
+			probMap: map[string]float64{
+				"the":      0.3478260869565218,
+				"quick":    0.01,
+				"brown":    0.01,
+				"fox":      0.01,
+				"jumped":   0.5,
+				"over":     0.01,
+				"lazy":     0.5714285714285715,
+				"white":    0.7499999999999999,
+				"dog":      0.01,
+				"computer": 0.99,
 			},
 		},
 	}
@@ -166,4 +166,3 @@ func TestQuickSort(t *testing.T) {
 	}
 }
 */
-
